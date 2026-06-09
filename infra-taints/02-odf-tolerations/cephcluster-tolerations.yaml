@@ -1,0 +1,52 @@
+# =============================================================================
+# cephcluster-tolerations.yaml
+# Patches the underlying rook-ceph CephCluster CR with infra tolerations.
+# This ensures that even if ODF reconciles the StorageCluster, the Ceph layer
+# retains its tolerations.
+#
+# Apply with:
+#   oc patch cephcluster ocs-storagecluster-cephcluster -n openshift-storage \
+#     --type merge --patch-file cephcluster-tolerations.yaml
+# =============================================================================
+apiVersion: ceph.rook.io/v1
+kind: CephCluster
+metadata:
+  name: ocs-storagecluster-cephcluster
+  namespace: openshift-storage
+spec:
+  placement:
+    all:
+      tolerations:
+        - key: node-role.kubernetes.io/infra
+          operator: Exists
+          effect: NoSchedule
+
+    mon:
+      tolerations:
+        - key: node-role.kubernetes.io/infra
+          operator: Exists
+          effect: NoSchedule
+
+    osd:
+      tolerations:
+        - key: node-role.kubernetes.io/infra
+          operator: Exists
+          effect: NoSchedule
+
+    mgr:
+      tolerations:
+        - key: node-role.kubernetes.io/infra
+          operator: Exists
+          effect: NoSchedule
+
+    crashcollector:
+      tolerations:
+        - key: node-role.kubernetes.io/infra
+          operator: Exists
+          effect: NoSchedule
+
+    cleanup:
+      tolerations:
+        - key: node-role.kubernetes.io/infra
+          operator: Exists
+          effect: NoSchedule

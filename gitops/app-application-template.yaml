@@ -1,0 +1,41 @@
+# =============================================================================
+# app-application-template.yaml
+# Template ArgoCD Application for application-level resources.
+# Scoped to dev/test namespaces only.
+#
+# Replace ALL values marked REPLACE-WITH-*
+# Apply with:
+#   oc apply -f my-app.yaml -n development
+# =============================================================================
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: REPLACE-WITH-APP-NAME           # e.g. my-microservice
+  namespace: development
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: app-project
+
+  source:
+    repoURL: 'https://YOUR-GIT-SERVER/app-gitops.git'
+    targetRevision: main
+    path: REPLACE-WITH-PATH-IN-REPO     # e.g. apps/my-microservice/
+
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: development              # or 'test'
+
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=false
+      - PrunePropagationPolicy=foreground
+    retry:
+      limit: 3
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 2m

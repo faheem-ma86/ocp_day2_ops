@@ -1,0 +1,55 @@
+# =============================================================================
+# platform-application-template.yaml
+# Template ArgoCD Application for platform/cluster-level resources.
+# Copy and customise for each platform component.
+#
+# Replace ALL values marked REPLACE-WITH-*
+# Apply with:
+#   oc apply -f my-platform-app.yaml -n openshift-gitops
+# =============================================================================
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: REPLACE-WITH-APP-NAME           # e.g. cluster-monitoring
+  namespace: openshift-gitops
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: platform
+
+  source:
+    repoURL: 'https://YOUR-GIT-SERVER/platform-gitops.git'
+    targetRevision: main
+    path: REPLACE-WITH-PATH-IN-REPO     # e.g. monitoring/
+
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: REPLACE-WITH-NAMESPACE   # e.g. openshift-monitoring
+
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=false
+      - PrunePropagationPolicy=foreground
+      - PruneLast=true
+    retry:
+      limit: 5
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m
+
+  ignoreDifferences:
+    # Ignore fields that OCP operators manage themselves
+    - group: apps
+      kind: Deployment
+      jsonPointers:
+        - /spec/replicas
+    - group: ''
+      kind: ConfigMap
+      name: cluster-monitoring-config
+      namespace: openshift-monitoring
+      jsonPointers:
+        - /metadata/resourceVersion

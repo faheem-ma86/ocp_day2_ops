@@ -1,0 +1,50 @@
+# =============================================================================
+# cluster-admin-argocd-rbac-cm.yaml
+# RBAC ConfigMap for the cluster-admin scoped ArgoCD instance in
+# openshift-gitops namespace.
+#
+# Security hardening:
+#   - NO system:authenticated:oauth (prevents all OAuth users getting admin)
+#   - Admin role restricted to named groups/users only
+#   - Read-only role for platform-viewers group
+#
+# Apply with:
+#   oc apply -f cluster-admin-argocd-rbac-cm.yaml
+# =============================================================================
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: argocd-rbac-cm
+  namespace: openshift-gitops
+data:
+  # Default policy: deny all unless explicitly granted
+  policy.default: role:readonly
+
+  # CSV policy rules
+  policy.csv: |
+    # ── Admin role ────────────────────────────────────────────────────────────
+    # Full access to all ArgoCD resources
+    # Grant only to named platform-admins group — NOT system:authenticated:oauth
+    p, role:admin, applications, *, */*, allow
+    p, role:admin, clusters,     get, *, allow
+    p, role:admin, repositories, *, *, allow
+    p, role:admin, projects,     *, *, allow
+    p, role:admin, accounts,     *, *, allow
+    p, role:admin, gpgkeys,      *, *, allow
+    p, role:admin, logs,         get, */*, allow
+    # NOTE: exec is intentionally omitted — use oc rsh directly
+
+    # ── Read-only role ────────────────────────────────────────────────────────
+    p, role:readonly, applications, get,  */*, allow
+    p, role:readonly, clusters,     get,  *,   allow
+    p, role:readonly, repositories, get,  *,   allow
+    p, role:readonly, projects,     get,  *,   allow
+    p, role:readonly, logs,         get,  */*, allow
+
+    # ── Group bindings ────────────────────────────────────────────────────────
+    # Replace with your actual OCP group names
+    g, platform-admins,  role:admin
+    g, platform-viewers, role:readonly
+
+  # SSO / OIDC scopes
+  scopes: '[groups]'

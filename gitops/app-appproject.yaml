@@ -1,0 +1,75 @@
+# =============================================================================
+# app-appproject.yaml
+# AppProject for the application-admin ArgoCD instance (development namespace).
+# Scoped to development and test namespaces only — no cluster-scoped resources.
+#
+# Apply with:
+#   oc apply -f app-appproject.yaml -n development
+# =============================================================================
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: app-project
+  namespace: development
+spec:
+  description: "Application GitOps project — dev/test namespaces"
+
+  sourceRepos:
+    - 'https://YOUR-GIT-SERVER/app-gitops.git'
+
+  # Restrict to development and test namespaces only
+  destinations:
+    - server: https://kubernetes.default.svc
+      namespace: development
+    - server: https://kubernetes.default.svc
+      namespace: test             # Add or remove as appropriate
+
+  # NO cluster-scoped resources allowed for application project
+  clusterResourceWhitelist: []
+
+  # Namespace-scoped resources — exclude PersistentVolume, ClusterRole, etc.
+  namespaceResourceWhitelist:
+    - group: apps
+      kind: Deployment
+    - group: apps
+      kind: StatefulSet
+    - group: apps
+      kind: DaemonSet
+    - group: ''
+      kind: Service
+    - group: ''
+      kind: ConfigMap
+    - group: ''
+      kind: Secret
+    - group: ''
+      kind: ServiceAccount
+    - group: ''
+      kind: PersistentVolumeClaim
+    - group: networking.k8s.io
+      kind: Ingress
+    - group: route.openshift.io
+      kind: Route
+    - group: rbac.authorization.k8s.io
+      kind: Role
+    - group: rbac.authorization.k8s.io
+      kind: RoleBinding
+    - group: autoscaling
+      kind: HorizontalPodAutoscaler
+    - group: batch
+      kind: Job
+    - group: batch
+      kind: CronJob
+
+  roles:
+    - name: project-admin
+      description: Application sync and management
+      policies:
+        - p, proj:app-project:project-admin, applications, *, app-project/*, allow
+      groups:
+        - project-admins
+    - name: project-viewer
+      description: Read-only access
+      policies:
+        - p, proj:app-project:project-viewer, applications, get, app-project/*, allow
+      groups:
+        - project-viewers

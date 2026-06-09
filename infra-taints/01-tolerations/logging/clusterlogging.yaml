@@ -1,0 +1,36 @@
+# =============================================================================
+# clusterlogging.yaml
+# Patches ClusterLogging (OpenShift Logging) to tolerate the infra node taint.
+#
+# Apply only if OpenShift Logging is deployed in your cluster.
+# Check: oc get clusterlogging instance -n openshift-logging
+# =============================================================================
+apiVersion: logging.openshift.io/v1
+kind: ClusterLogging
+metadata:
+  name: instance
+  namespace: openshift-logging
+spec:
+  collection:
+    tolerations:
+      - key: node-role.kubernetes.io/infra
+        operator: Exists
+        effect: NoSchedule
+  logStore:
+    type: elasticsearch
+    elasticsearch:
+      nodeSelector:
+        node-role.kubernetes.io/infra: ""
+      tolerations:
+        - key: node-role.kubernetes.io/infra
+          operator: Exists
+          effect: NoSchedule
+  visualization:
+    type: kibana
+    kibana:
+      nodeSelector:
+        node-role.kubernetes.io/infra: ""
+      tolerations:
+        - key: node-role.kubernetes.io/infra
+          operator: Exists
+          effect: NoSchedule

@@ -1,0 +1,52 @@
+# =============================================================================
+# app-admin-argocd-rbac-cm.yaml
+# RBAC ConfigMap for the application-admin scoped ArgoCD instance in
+# development namespace.
+#
+# Security hardening:
+#   - No exec permissions
+#   - No cluster-write access (clusters, get only)
+#   - Scoped to dev/test namespaces via AppProject (not enforced here)
+#   - project-admins group has full application management within project scope
+#
+# Apply with:
+#   oc apply -f app-admin-argocd-rbac-cm.yaml
+# =============================================================================
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: argocd-rbac-cm
+  namespace: development
+data:
+  policy.default: role:''
+
+  policy.csv: |
+    # ── project-admin role ────────────────────────────────────────────────────
+    # Can manage applications and repositories within allowed projects
+    # Cannot: exec into pods, modify cluster connections, manage accounts
+    p, role:project-admin, applications,  get,    */*, allow
+    p, role:project-admin, applications,  create, */*, allow
+    p, role:project-admin, applications,  update, */*, allow
+    p, role:project-admin, applications,  delete, */*, allow
+    p, role:project-admin, applications,  sync,   */*, allow
+    p, role:project-admin, applications,  action, */*, allow
+    p, role:project-admin, repositories,  get,    *,   allow
+    p, role:project-admin, repositories,  create, *,   allow
+    p, role:project-admin, repositories,  update, *,   allow
+    p, role:project-admin, clusters,      get,    *,   allow
+    p, role:project-admin, projects,      get,    *,   allow
+    p, role:project-admin, logs,          get,    */*, allow
+    # exec intentionally omitted — least privilege
+
+    # ── project-viewer role ───────────────────────────────────────────────────
+    p, role:project-viewer, applications, get, */*, allow
+    p, role:project-viewer, repositories, get, *,   allow
+    p, role:project-viewer, projects,     get, *,   allow
+    p, role:project-viewer, clusters,     get, *,   allow
+    p, role:project-viewer, logs,         get, */*, allow
+
+    # ── Group bindings ────────────────────────────────────────────────────────
+    g, project-admins,  role:project-admin
+    g, project-viewers, role:project-viewer
+
+  scopes: '[groups]'

@@ -1,0 +1,23 @@
+# Secrets and sensitive files — never commit real credentials
+*-secret-real.yaml
+*-credentials.yaml
+*.key
+*.pem
+*.crt
+alertmanager-raw.yaml
+
+# Editor artifacts
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS artifacts
+.DS_Store
+Thumbs.db
+
+# Temp / output files
+*.bak
+*.tmp
+infra-nodes-backup.yaml

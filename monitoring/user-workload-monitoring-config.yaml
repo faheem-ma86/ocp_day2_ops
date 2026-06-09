@@ -1,0 +1,53 @@
+# =============================================================================
+# user-workload-monitoring-config.yaml
+# Configures the user workload monitoring stack (separate Prometheus instance
+# for application namespaces) to pin to infra nodes with taint tolerations.
+#
+# Apply with:
+#   oc apply -f user-workload-monitoring-config.yaml
+# =============================================================================
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: user-workload-monitoring-config
+  namespace: openshift-user-workload-monitoring
+data:
+  config.yaml: |
+    prometheusOperator:
+      nodeSelector:
+        node-role.kubernetes.io/infra: ""
+      tolerations:
+        - key: node-role.kubernetes.io/infra
+          operator: Exists
+          effect: NoSchedule
+
+    prometheus:
+      nodeSelector:
+        node-role.kubernetes.io/infra: ""
+      tolerations:
+        - key: node-role.kubernetes.io/infra
+          operator: Exists
+          effect: NoSchedule
+      retention: 7d
+      resources:
+        requests:
+          cpu: 100m
+          memory: 512Mi
+        limits:
+          cpu: "1"
+          memory: 2Gi
+
+    thanosRuler:
+      nodeSelector:
+        node-role.kubernetes.io/infra: ""
+      tolerations:
+        - key: node-role.kubernetes.io/infra
+          operator: Exists
+          effect: NoSchedule
+      resources:
+        requests:
+          cpu: 50m
+          memory: 128Mi
+        limits:
+          cpu: 200m
+          memory: 256Mi

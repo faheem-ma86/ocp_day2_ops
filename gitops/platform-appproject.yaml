@@ -1,0 +1,44 @@
+# =============================================================================
+# platform-appproject.yaml
+# AppProject for the cluster-admin ArgoCD instance (openshift-gitops).
+# Grants access to cluster-scoped and all-namespace resources.
+#
+# Apply with:
+#   oc apply -f platform-appproject.yaml -n openshift-gitops
+# =============================================================================
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: platform
+  namespace: openshift-gitops
+spec:
+  description: "Platform / cluster-admin GitOps project"
+
+  # Allow sync from your platform GitOps repo
+  sourceRepos:
+    - 'https://YOUR-GIT-SERVER/platform-gitops.git'
+    - 'https://YOUR-GIT-SERVER/ocp_day2_ops.git'
+
+  # Allow deploying to all namespaces and the cluster itself
+  destinations:
+    - server: https://kubernetes.default.svc
+      namespace: '*'
+
+  # Allow all cluster-scoped resource kinds
+  clusterResourceWhitelist:
+    - group: '*'
+      kind: '*'
+
+  # Namespace-scoped resources
+  namespaceResourceWhitelist:
+    - group: '*'
+      kind: '*'
+
+  # Roles within this project
+  roles:
+    - name: platform-admin
+      description: Full sync and management rights
+      policies:
+        - p, proj:platform:platform-admin, applications, *, platform/*, allow
+      groups:
+        - platform-admins

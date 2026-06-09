@@ -1,0 +1,16 @@
+# =============================================================================
+# imageregistry.yaml
+# Patches the cluster image registry operator config to tolerate the infra
+# node taint and schedule on infra nodes.
+# =============================================================================
+apiVersion: imageregistry.operator.openshift.io/v1
+kind: Config
+metadata:
+  name: cluster
+spec:
+  nodeSelector:
+    node-role.kubernetes.io/infra: ""
+  tolerations:
+    - key: node-role.kubernetes.io/infra
+      operator: Exists
+      effect: NoSchedule
